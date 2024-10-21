@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { handleLogin } from "./api/auth/AuthHandlers";
+
 import { useRouter } from "next/navigation";
+import { SERVER_BASE } from "./constants";
+import { useCookies } from "next-client-cookies";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const cookies = useCookies();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -15,6 +18,40 @@ export default function Home() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formData.username || !formData.password) {
+      toast.error("Please enter a username and password");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const response = await fetch(SERVER_BASE + "/auth/login", {
+      method: "POST",
+      body: JSON.stringify(formData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data?.token) {
+      cookies.set("accessToken", data?.token);
+      cookies.set("user", JSON.stringify(data?.user));
+      toast.success("Logged in successfully");
+      setIsLoading(false);
+      router.push("/home");
+    } else if (data?.message) {
+      toast.error(data.message);
+      setIsLoading(false);
+    } else {
+      toast.error("Something went wrong");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,17 +77,7 @@ export default function Home() {
             </p>
           </div>
 
-          <form
-            className="max-w-md md:ml-auto w-full"
-            action={async (formData) => {
-              setIsLoading(true);
-              const error = await handleLogin(formData);
-              if (error) toast.error(error as string);
-              else toast.success("Logged in successfully");
-              setIsLoading(false);
-              router.push("/home");
-            }}
-          >
+          <form className="max-w-md md:ml-auto w-full" onSubmit={handleSubmit}>
             <h3 className="text-gray-800 text-3xl font-extrabold mb-8">
               Sign in
             </h3>

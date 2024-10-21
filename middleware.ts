@@ -1,17 +1,34 @@
-import { auth } from "@/auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export default auth((req) => {
-  if (!req.auth && !["/", "/register"].includes(req.nextUrl.pathname)) {
-    const newUrl = new URL("/", req.nextUrl.origin);
-    return Response.redirect(newUrl);
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // Allow asset calls to pass through
+  if (
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/static/")
+  ) {
+    return NextResponse.next();
   }
 
-  if (req.auth && !req.nextUrl.pathname.startsWith("/home")) {
-    const newUrl = new URL("/home", req.nextUrl.origin);
-    return Response.redirect(newUrl);
-  }
-});
+  const accessToken = req.cookies.get("accessToken");
 
-export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
-};
+  const publicRoutes = ["/", "/register"];
+  console.log("pathname", pathname);
+
+  if (publicRoutes.includes(pathname)) {
+    if (!accessToken) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/home", req.url));
+  }
+
+  if (accessToken) {
+    return NextResponse.next();
+  }
+
+  const url = req.nextUrl.clone();
+  url.pathname = "/";
+  return NextResponse.redirect(url);
+}
