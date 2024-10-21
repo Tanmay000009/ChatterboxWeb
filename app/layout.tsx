@@ -27,13 +27,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ToastContainer />
-        <CookiesProvider>{children}</CookiesProvider>
-      </body>
-    </html>
+    <CookiesProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-100`}
+        >
+          <ToastContainer />
+
+          {children}
+        </body>
+      </html>
+    </CookiesProvider>
   );
 }
