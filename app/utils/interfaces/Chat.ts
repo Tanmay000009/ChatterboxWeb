@@ -1,8 +1,13 @@
 export interface IMessage {
   _id: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
+  text: string;
+  senderId: string;
+  timestamp: string;
+  type: string;
+  senderUsername: string;
+  chatName: string;
+  chatId: string;
+  messageId: string;
 }
 
 export interface IChat {

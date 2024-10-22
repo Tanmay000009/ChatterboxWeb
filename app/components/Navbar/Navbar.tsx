@@ -3,14 +3,16 @@
 import { useCookies } from "next-client-cookies";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { Socket } from "socket.io-client";
 
-export const Navbar = () => {
+export const Navbar = ({ socket }: { socket: Socket }) => {
   const cookies = useCookies();
 
   const router = useRouter();
 
   const handleLogout = () => {
     cookies.remove("accessToken");
+    socket.disconnect();
     toast.success("Logged out successfully");
     router.push("/");
   };
